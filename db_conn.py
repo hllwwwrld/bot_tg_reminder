@@ -12,3 +12,7 @@ def conn():
                             password=config.get('db_conn', 'password'),
                             host=config.get('db_conn', 'host'),
                             port=config.get('db_conn', 'port'))
+
+
+def bot_birthday_token():
+    return config.get('telebot', 'birthday_bot')
