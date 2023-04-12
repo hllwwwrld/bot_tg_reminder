@@ -2,6 +2,7 @@ import telebot
 import sql_db
 import message_wrapper
 import db_conn
+import time
 
 
 bot = telebot.TeleBot(db_conn.bot_birthday_token())
@@ -55,13 +56,13 @@ def get_date(message, date_dict):
     if message_wrapper.message_is_date(message):
         try:
             date_dict['date'] = message.text  # добавляю в ключевые поля саму дату
-            bot.send_message(user_id, 'Введите название даты')   # запрашиваю имя даты
+            bot.send_message(user_id, 'Send name of date')   # запрашиваю имя даты
             bot.register_next_step_handler(message, get_date_name, date_dict)  # перехожу к следущему шагу, где получаю название даты
         except Exception:
             date_dict.clear()
             bot.send_message(user_id, 'oops')
     else:  # если дата неверна - оповещаю пользователя и перехожу к следующему шагу - повторный вызов данной функции
-        bot.reply_to(message, 'Неверная дата, введите заново')
+        bot.reply_to(message, 'invalid date, try again')
         bot.register_next_step_handler(message, get_date, date_dict)
 
 
@@ -83,7 +84,46 @@ def get_date_name(message, date_dict):
 
 
 @bot.message_handler(commands=['check'])
-def check_all_dates(message):
+def check_all_user_dates(message):
+    user_id = message.from_user.id
+    dates = sql_db.check_dates(user_id)
+    if len(dates) > 0:
+        bot.send_message(user_id, f'I know {len(dates)} your dates, here they are (ordered by closest):')
+        for name in dates:
+            bot.send_message(user_id, f'{name}: {dates[name]}')
+    else:
+        bot.send_message(user_id, 'Not found any dates for you')
+
+
+@bot.message_handler(commands=['nearest'])
+def check_nearest_user_date(message):
+    user_id = message.from_user.id
+    dates = sql_db.check_dates(user_id, nearest=True)
+    if len(dates) > 0:
+        for name in dates:
+            bot.send_message(user_id, f'Your nearest date is:\n{name}: {dates[name]}')
+    else:
+        print('Not found any dates for you')
+
+
+@bot.message_handler(commands=['in_month'])
+def check_dates_in_month_step_1(message):
+    user_id = message.from_user.id
+    bot.send_message(user_id, 'Choose month to check dates for (from 1 to 12)')
+    bot.register_next_step_handler(message, check_dates_in_month_step_2)
+
+
+def check_dates_in_month_step_2(message):
+    user_id = message.from_user.id
+    dates = sql_db.check_dates(user_id, month=message.text)
+    if len(dates) > 0:
+        for name in dates:
+            bot.send_message(user_id, f'{name}: {dates[name]}')
+    else:
+        bot.send_message(user_id, f'Not found any dates in month "{message.text}" for you')
+
+
+def remind_dates():
     pass
 
 
