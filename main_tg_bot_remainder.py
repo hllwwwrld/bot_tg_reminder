@@ -129,24 +129,13 @@ def check_dates_in_month_step_1(message):
 
 def check_dates_in_month_step_2(message):
     user_id = message.from_user.id
+    temp = 3
     dates = database.check_dates(user_id, month=message.text)
     if len(dates) > 0:
         for name in dates:
             bot.send_message(user_id, f'{name}: {dates[name]}')
     else:
         bot.send_message(user_id, f'Not found any dates in month "{message.text}" for you')
-
-
-def remind_dates():
-    users = database.get_all_users()  # получаю список всех user_id <и кол-во дней, за которое юзер получает уведомления>
-    for user_id in users:
-        dates_to_remind = database.get_remind_date(user_id)  # для каждого пользователя получаю список
-        if len(dates_to_remind) > 0:
-            bot.send_message(user_id, 'Reminding about your upcoming dates')
-            for date in dates_to_remind:
-                bot.send_message(user_id, f'In {date[3]} days comes "{date[0]}" date, which starts on {date[1]}')
-        # else:
-        #     bot.send_message(user, "Don't have any new dates comes in {user[1]}")
 
 
 if __name__ == '__main__':
