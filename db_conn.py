@@ -1,18 +1,27 @@
 import psycopg2
-import configparser
+import telebot
 
 
-config = configparser.ConfigParser()
-config.read('connection_config')
+class Connections:
+    def __init__(self, config):
+        api_token = config.get('telebot', 'remainder_bot')
+        self.bot = telebot.TeleBot(api_token)
+        self.conn_db = psycopg2.connect(database=config.get('db_conn', 'database'),
+                                        user=config.get('db_conn', 'user'),
+                                        password=config.get('db_conn', 'password'),
+                                        host=config.get('db_conn', 'host'),
+                                        port=config.get('db_conn', 'port'))
 
 
-def conn():
-    return psycopg2.connect(database=config.get('db_conn', 'database'),
-                            user=config.get('db_conn', 'user'),
-                            password=config.get('db_conn', 'password'),
-                            host=config.get('db_conn', 'host'),
-                            port=config.get('db_conn', 'port'))
 
+    # def conn_db(self):
+    #     return psycopg2.connect(database=config.get('db_conn', 'database'),
+    #                             user=config.get('db_conn', 'user'),
+    #                             password=config.get('db_conn', 'password'),
+    #                             host=config.get('db_conn', 'host'),
+    #                             port=config.get('db_conn', 'port'))
+    #
+    # def create_bot_conn(self):
+    #     api_token = config.get('telebot', 'remainder_bot')
+    #     self.bot = telebot.TeleBot(api_token)
 
-def bot_birthday_token():
-    return config.get('telebot', 'birthday_bot')

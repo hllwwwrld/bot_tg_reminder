@@ -1,11 +1,16 @@
-import telebot
-import sql_db
+from sql_db import SqlRequests
+from db_conn import Connections
 import message_wrapper
-import db_conn
-import time
+import configparser
+from date_remaind import start_process
 
+config = configparser.ConfigParser()
+config.read('connection_config')
 
-bot = telebot.TeleBot(db_conn.bot_birthday_token())
+connections = Connections(config)
+database = SqlRequests(config)
+
+bot = connections.bot
 
 
 # регистрация пользователя по командам /reg и /start
@@ -16,18 +21,24 @@ def registration(message):
     username = str(message.from_user.username)
 
     # если пользователь новый, ранее его не регистрировали - создается
-    if sql_db.is_user_new(user_id):
-        sql_db.create_user(user_id, username)  # создаю пользователя
+    if database.is_user_new(user_id):
+        database.create_user(user_id, username)  # создаю пользователя
 
         # оповещаю пользователя и вывожу лог
-        bot.send_message(user_id, f'Success registration\nuser_id: {user_id}\nand username: {username}')
+        bot.send_message(user_id, f'''Success registration\nuser_id: {user_id}\nand username: {username}.
+You will get reminds about chosen dates 3 days before a date, everyday
+You can set personal days value (instead of default 3) to get messages
+use command (/<command>)''')
         print(f'Зарегестрирован пользователь с ником "{username}" и ID "{user_id}" ')
 
     # если пользователь уже есть в базе, то обновляются данные
     else:
-        sql_db.update_user(user_id, username)
-        bot.send_message(user_id, f'Registration data updated\nuser_id: {user_id}\nusername: {username}')
-        print(f'Данные обновлены по пользователю с ником "{username}" и ID "{user_id}" ')
+        database.update_user(user_id, username)
+        bot.send_message(user_id, f'''Registration data updated\nuser_id:{user_id}\nusername: {username}
+You are now taking remind 3 days before a date, everyday
+You can set personal days value (instead of your value) to get messages,
+use command (/<command>)''')
+        print(f'Данные обновлены по пользователю с ником "{username}" и ID "{user_id}"')
 
 
 # добавление новой даты
@@ -41,7 +52,7 @@ def add_new_bday(message):
     date_dict['user_id'] = user_id  # добавляю в словарь айди юзера
     print(f'Добавление новой даты для пользователя {username}, {user_id}')
 
-    bot.send_message(user_id, 'Введите день рождения в формате YYYY-MM-DD')
+    bot.send_message(user_id, 'Send your date, in format: YYYY-MM-DD')
     # перехожу к следующему шагу, как параметр перадаю:
     # сообщение, чтобы знать к какому чату обращаться
     # функцию, в которой будет выполняться следующий шаг
@@ -57,8 +68,10 @@ def get_date(message, date_dict):
         try:
             date_dict['date'] = message.text  # добавляю в ключевые поля саму дату
             bot.send_message(user_id, 'Send name of date')   # запрашиваю имя даты
-            bot.register_next_step_handler(message, get_date_name, date_dict)  # перехожу к следущему шагу, где получаю название даты
-        except Exception:
+
+            # перехожу к следущему шагу, где получаю название даты
+            bot.register_next_step_handler(message, get_date_name, date_dict)
+        except:
             date_dict.clear()
             bot.send_message(user_id, 'oops')
     else:  # если дата неверна - оповещаю пользователя и перехожу к следующему шагу - повторный вызов данной функции
@@ -72,21 +85,22 @@ def get_date_name(message, date_dict):
     try:
         date_dict['name'] = message.text   # добавляю новое значение в ключевые поля с датой
 
-        sql_db.add_date(date_dict['name'], date_dict['date'], date_dict['user_id'])  # создаю новую дату для пользователя в БД
+        # создаю новую дату для пользователя в БД
+        database.add_date(date_dict['name'], date_dict['date'], date_dict['user_id'])
 
         # оповещения пользователя и вывод лога
-        bot.send_message(user_id, 'Новая дата успешно добавлена')
+        bot.send_message(user_id, 'New date successfully added')
         bot.send_message(user_id, f"{date_dict['date']} - {date_dict['name']}")
         print(f"Добавлена новая дата для пользователя {user_id}. {date_dict['date']} - {date_dict['name']}")
 
-    except Exception:
+    except:
         bot.reply_to(message, 'oops, something went wrong')
 
 
 @bot.message_handler(commands=['check'])
 def check_all_user_dates(message):
     user_id = message.from_user.id
-    dates = sql_db.check_dates(user_id)
+    dates = database.check_dates(user_id)
     if len(dates) > 0:
         bot.send_message(user_id, f'I know {len(dates)} your dates, here they are (ordered by closest):')
         for name in dates:
@@ -98,7 +112,7 @@ def check_all_user_dates(message):
 @bot.message_handler(commands=['nearest'])
 def check_nearest_user_date(message):
     user_id = message.from_user.id
-    dates = sql_db.check_dates(user_id, nearest=True)
+    dates = database.check_dates(user_id, nearest=True)
     if len(dates) > 0:
         for name in dates:
             bot.send_message(user_id, f'Your nearest date is:\n{name}: {dates[name]}')
@@ -115,7 +129,7 @@ def check_dates_in_month_step_1(message):
 
 def check_dates_in_month_step_2(message):
     user_id = message.from_user.id
-    dates = sql_db.check_dates(user_id, month=message.text)
+    dates = database.check_dates(user_id, month=message.text)
     if len(dates) > 0:
         for name in dates:
             bot.send_message(user_id, f'{name}: {dates[name]}')
@@ -124,7 +138,20 @@ def check_dates_in_month_step_2(message):
 
 
 def remind_dates():
-    pass
+    users = database.get_all_users()  # получаю список всех user_id <и кол-во дней, за которое юзер получает уведомления>
+    for user_id in users:
+        dates_to_remind = database.get_remind_date(user_id)  # для каждого пользователя получаю список
+        if len(dates_to_remind) > 0:
+            bot.send_message(user_id, 'Reminding about your upcoming dates')
+            for date in dates_to_remind:
+                bot.send_message(user_id, f'In {date[3]} days comes "{date[0]}" date, which starts on {date[1]}')
+        # else:
+        #     bot.send_message(user, "Don't have any new dates comes in {user[1]}")
 
 
-bot.infinity_polling()
+if __name__ == '__main__':
+    start_process()
+    try:
+        bot.polling(none_stop=True)
+    except:
+        pass
