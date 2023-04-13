@@ -4,6 +4,7 @@ import message_wrapper
 import configparser
 from date_remaind import start_process
 
+
 config = configparser.ConfigParser()
 config.read('connection_config')
 
@@ -42,8 +43,8 @@ use command (/<command>)''')
 
 
 # добавление новой даты
-@bot.message_handler(commands=['add'])
-def add_new_bday(message):
+@bot.message_handler(commands=['add_date'])
+def add_new_date(message):
     user_id = message.from_user.id
     username = message.from_user.username
 
@@ -52,7 +53,7 @@ def add_new_bday(message):
     date_dict['user_id'] = user_id  # добавляю в словарь айди юзера
     print(f'Добавление новой даты для пользователя {username}, {user_id}')
 
-    bot.send_message(user_id, 'Send your date, in format: YYYY-MM-DD')
+    bot.send_message(user_id, 'Send your date, in format: YYYY-MM-DD [hh:mm]')
     # перехожу к следующему шагу, как параметр перадаю:
     # сообщение, чтобы знать к какому чату обращаться
     # функцию, в которой будет выполняться следующий шаг
@@ -64,7 +65,7 @@ def get_date(message, date_dict):
     user_id = message.from_user.id
 
     # проверяю полученную дату на соответствие формату
-    if message_wrapper.message_is_date(message):
+    if message_wrapper.message_is_date(message) or message_wrapper.message_is_date_time(message):
         try:
             date_dict['date'] = message.text  # добавляю в ключевые поля саму дату
             bot.send_message(user_id, 'Send name of date')   # запрашиваю имя даты
@@ -135,6 +136,9 @@ def check_dates_in_month_step_2(message):
             bot.send_message(user_id, f'{name}: {dates[name]}')
     else:
         bot.send_message(user_id, f'Not found any dates in month "{message.text}" for you')
+
+
+
 
 
 if __name__ == '__main__':
