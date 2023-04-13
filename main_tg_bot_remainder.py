@@ -129,7 +129,6 @@ def check_dates_in_month_step_1(message):
 
 def check_dates_in_month_step_2(message):
     user_id = message.from_user.id
-    temp = 3
     dates = database.check_dates(user_id, month=message.text)
     if len(dates) > 0:
         for name in dates:
