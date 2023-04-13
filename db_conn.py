@@ -12,8 +12,6 @@ class Connections:
                                         host=config.get('db_conn', 'host'),
                                         port=config.get('db_conn', 'port'))
 
-
-
     # def conn_db(self):
     #     return psycopg2.connect(database=config.get('db_conn', 'database'),
     #                             user=config.get('db_conn', 'user'),
@@ -24,4 +22,3 @@ class Connections:
     # def create_bot_conn(self):
     #     api_token = config.get('telebot', 'remainder_bot')
     #     self.bot = telebot.TeleBot(api_token)
-

@@ -127,4 +127,3 @@ class SqlRequests(Connections):
         """
         res = self.execute_sql(sql_request)
         return res
-
