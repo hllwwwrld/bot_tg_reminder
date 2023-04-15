@@ -1,6 +1,7 @@
-import configparser
 from db_conn import Connections
 from sql_db import SqlRequests
+import configparser
+import datetime
 
 config = configparser.ConfigParser()
 config.read('connection_config')
@@ -21,6 +22,7 @@ def remind_dates():
                 bot.send_message(user_id, f'In {int(date[3])} days comes "{date[0]}" date, which starts on {date[1]}')
         # else:
         #     bot.send_message(user, "Don't have any new dates comes in {user[1]}")
+    print(f'\n{str(datetime.datetime.now())}: Выполнена ежедневная джоба по отправке уведомлений')
 
 
 def remind_hours():
@@ -32,3 +34,4 @@ def remind_hours():
             for event in hours_to_remind:
                 bot.send_message(user_id, f'In {event[3]} hours comes "{event[0]}" event')
         # else:
+    print(f'\n{str(datetime.datetime.now())}: Выполнена ежечасная джоба по отправке уведомлений')

@@ -149,7 +149,7 @@ def delete_date_step_2(message):
     user_id = message.from_user.id
     date_name = message.text
     database.delete_date(user_id, date_name)
-    print(f'Удаляем дату для пользователя {user_id}, {message.from_user.username}, дата: {date_name}')
+    print(f'Удаление даты для пользователя {user_id}, {message.from_user.username}, дата: {date_name}')
     bot.send_message(user_id, f'Success deleted date {date_name}')
 
 
