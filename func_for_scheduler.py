@@ -16,8 +16,19 @@ def remind_dates():
     for user_id in users:
         dates_to_remind = database.get_remind_date(user_id)  # для каждого пользователя получаю список
         if len(dates_to_remind) > 0:
-            bot.send_message(user_id, 'Reminding about your upcoming dates')
+            bot.send_message(user_id, 'Reminding about your upcoming dates:')
             for date in dates_to_remind:
                 bot.send_message(user_id, f'In {int(date[3])} days comes "{date[0]}" date, which starts on {date[1]}')
         # else:
         #     bot.send_message(user, "Don't have any new dates comes in {user[1]}")
+
+
+def remind_hours():
+    users = database.get_all_users()
+    for user_id in users:
+        hours_to_remind = database.get_remind_hours(user_id)
+        if len(hours_to_remind) > 0:
+            bot.send_message(user_id, f'Upcoming events in next 3 hours:')
+            for event in hours_to_remind:
+                bot.send_message(user_id, f'In {event[3]} hours comes "{event[0]}" event')
+        # else:

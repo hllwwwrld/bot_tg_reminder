@@ -43,7 +43,7 @@ use command (/<command>)''')
 
 
 # добавление новой даты
-@bot.message_handler(commands=['add_date'])
+@bot.message_handler(commands=['add'])
 def add_new_date(message):
     user_id = message.from_user.id
     username = message.from_user.username
@@ -138,7 +138,19 @@ def check_dates_in_month_step_2(message):
         bot.send_message(user_id, f'Not found any dates in month "{message.text}" for you')
 
 
+@bot.message_handler(commands=['delete'])
+def delete_date_step_1(message):
+    user_id = message.from_user.id
+    bot.send_message(user_id, 'Send name of date to delete')
+    bot.register_next_step_handler(message, delete_date_step_2)
 
+
+def delete_date_step_2(message):
+    user_id = message.from_user.id
+    date_name = message.text
+    database.delete_date(user_id, date_name)
+    print(f'Удаляем дату для пользователя {user_id}, {message.from_user.username}, дата: {date_name}')
+    bot.send_message(user_id, f'Success deleted date {date_name}')
 
 
 if __name__ == '__main__':

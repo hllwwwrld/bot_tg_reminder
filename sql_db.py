@@ -127,3 +127,32 @@ class SqlRequests(Connections):
         """
         res = self.execute_sql(sql_request)
         return res
+
+    def get_remind_hours(self, user_id):
+        sql_request = f'''
+        select d."name", d."date", u.user_id,
+        3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) as hours_until
+        from dates d
+        join "user" u 
+        on d.user_id = u.tab_id 
+        where 3 - date_part('hour', age(current_timestamp, d."date" - interval '3 hours')) between 0 and 3
+        and 3 - (date_part('day', age(current_timestamp, d.date - interval '3 days'))) in (0, 1)
+        and date_part('month', age(current_date, d.date::date - interval '3 days')) = 0
+        and d."date"::text not like '% 00:00:00'
+        and u.user_id = '{user_id}'
+        order by 4
+        '''
+        res = self.execute_sql(sql_request)
+        return res
+
+    def delete_date(self, user_id, name):
+        body = f'''
+        delete from dates d
+        where d.tab_id in (select d.tab_id from dates d
+                            join "user" u
+                            on d.user_id = u.tab_id
+                            where u.user_id = '{user_id}'
+                            and d.name = '{name}'
+                            )
+        '''
+        self.execute_sql(body, select=False)
