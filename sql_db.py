@@ -115,12 +115,12 @@ class SqlRequests(Connections):
     def get_remind_date(self, user_id, user_days_remaind_to=3):
         sql_request = f"""
         select d."name", d."date", d.user_id, 
-        {user_days_remaind_to} - (date_part('day', age(current_date, d.date - interval '{user_days_remaind_to} days'))) 
+        {user_days_remaind_to} - (date_part('day', age(current_date, d.date::date - interval '{user_days_remaind_to} days'))) 
         as "days_until_date"
         from dates d
         join "user" u on d.user_id = u.tab_id
-        where date_part('month', age(current_date, d.date - interval '{user_days_remaind_to} days')) = 0
-        and date_part('day', age(current_date, d.date - interval '{user_days_remaind_to} days')) between 0 and
+        where date_part('month', age(current_date, d.date::date - interval '{user_days_remaind_to} days')) = 0
+        and date_part('day', age(current_date, d.date::date - interval '{user_days_remaind_to} days')) between 0 and
         {user_days_remaind_to}
         and u.user_id = '{user_id}'
         order by 4
@@ -130,13 +130,21 @@ class SqlRequests(Connections):
 
     def get_remind_hours(self, user_id):
         sql_request = f'''
-        select d."name", d."date", u.user_id,
-        3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) as hours_until
+        select d."name", d."date", u.user_id, 
+        3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) as hours_until,
+        60 - date_part('minute', age(current_timestamp, d."date")) as minutes_until
+        --3 - (date_part('day', age(current_timestamp, d.date - interval '3 days'))) as "days_until_date"
+        --date_part('month', age(current_timestamp, d.date - interval '3 days')) as "month_until"
         from dates d
         join "user" u 
         on d.user_id = u.tab_id 
-        where 3 - date_part('hour', age(current_timestamp, d."date" - interval '3 hours')) between 0 and 3
-        and 3 - (date_part('day', age(current_timestamp, d.date - interval '3 days'))) in (0, 1)
+        where 
+        case 
+            when 3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) = 0
+            then date_part('minute', age(d."date", current_timestamp)) >= 0
+            else 3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) between 1 and 3
+        end
+        and 3 - (date_part('day', age(current_date, d.date::date - interval '3 days'))) in (0, 1)
         and date_part('month', age(current_date, d.date::date - interval '3 days')) = 0
         and d."date"::text not like '% 00:00:00'
         and u.user_id = '{user_id}'

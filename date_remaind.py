@@ -15,5 +15,8 @@ class ScheduleInfinite:
 
         print(schedule.get_jobs())
 
+        for job in schedule.get_jobs():
+            print(job)
+
         while True:
             schedule.run_pending()

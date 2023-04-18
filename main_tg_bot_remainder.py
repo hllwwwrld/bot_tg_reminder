@@ -156,6 +156,6 @@ def delete_date_step_2(message):
 if __name__ == '__main__':
     start_process()
     try:
-        bot.polling(none_stop=True)
+        bot.infinity_polling()
     except:
         pass
