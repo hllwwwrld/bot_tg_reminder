@@ -132,7 +132,7 @@ class SqlRequests(Connections):
         sql_request = f'''
         select d."name", d."date", u.user_id, 
         3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) as hours_until,
-        60 - date_part('minute', age(current_timestamp, d."date")) as minutes_until
+        abs(date_part('minute', age(current_timestamp, d."date"))) as minutes_until
         --3 - (date_part('day', age(current_timestamp, d.date - interval '3 days'))) as "days_until_date"
         --date_part('month', age(current_timestamp, d.date - interval '3 days')) as "month_until"
         from dates d
