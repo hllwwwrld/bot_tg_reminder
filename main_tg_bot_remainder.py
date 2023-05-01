@@ -105,7 +105,7 @@ def check_all_user_dates(message):
     if len(dates) > 0:
         bot.send_message(user_id, f'I know {len(dates)} your dates, here they are (ordered by closest):')
         for name in dates:
-            bot.send_message(user_id, f'{name}: {dates[name]}')
+            bot.send_message(user_id, f'{name}:\n{dates[name]}')
     else:
         bot.send_message(user_id, 'Not found any dates for you')
 
