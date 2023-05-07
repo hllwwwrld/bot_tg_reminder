@@ -13,7 +13,7 @@ bot = connections.bot
 
 
 def remind_dates():
-    users = database.get_all_users()  # получаю список всех user_id <и кол-во дней, за которое юзер получает уведомления>
+    users = database.get_all_users()  # получаю список всех user_id <и кол-во дней, за которое юзер получает уведомления
     for user_id in users:
         dates_to_remind = database.get_remind_date(user_id)  # для каждого пользователя получаю список
         if len(dates_to_remind) > 0:

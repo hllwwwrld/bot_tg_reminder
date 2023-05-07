@@ -5,16 +5,17 @@ class SqlRequests(Connections):
     # если fetch=True - запрос на выборку, нужно что-то вернуть, иначе запрос на изменение
     # fetchone - если надо вернуть одну строку
     def execute_sql(self, sql, select=True, fetchone=False):
-        with self.conn_db as database, database.cursor() as cursor:
-            cursor.execute(sql)
+        try:
+            self.cursor.execute(sql)
             if select:
                 if fetchone:
-                    return cursor.fetchone()
+                    return self.cursor.fetchone()
                 else:
-                    return cursor.fetchall()
+                    return self.cursor.fetchall()
             else:
-                database.commit()
-        return True
+                self.database.commit()
+        except:
+            print(f'Ошибка выполнения sql-запроса {sql}')
 
     def is_user_new(self, user_id):
         sql_request = f'''
