@@ -26,11 +26,11 @@ class SqlRequests(Connections):
         return not bool(res)
 
     def get_user_tab_id_by_user_id(self, user_id):
-        sql_requset = f"""
+        sql_request = f"""
         select tab_id from "user"
         where user_id = '{user_id}'
         """
-        res = self.execute_sql(sql_requset, fetchone=True)
+        res = self.execute_sql(sql_request, fetchone=True)
         return res[0]
 
     def create_user(self, user_id, username):

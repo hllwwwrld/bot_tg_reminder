@@ -24,4 +24,3 @@ def message_is_date_time(message):
         return True
     except:
         return False
-
