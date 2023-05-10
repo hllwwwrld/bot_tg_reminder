@@ -80,7 +80,7 @@ class SqlRequests(Connections):
         '''
         self.execute_sql(sql_request, select=False)
 
-    def check_dates(self, user_id: str, month: str = 'all', nearest: bool = False) -> dict[str, str]:
+    def check_dates(self, user_id: str, month: str = 'all', nearest: bool = False) -> dict[str: str]:
         if month == 'all':
             month = ''
         else:
