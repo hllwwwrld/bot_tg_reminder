@@ -4,7 +4,7 @@ from db_conn import Connections
 class SqlRequests(Connections):
     # если fetch=True - запрос на выборку, нужно что-то вернуть, иначе запрос на изменение
     # fetchone - если надо вернуть одну строку
-    def execute_sql(self, sql, select=True, fetchone=False):
+    def execute_sql(self, sql: str, select: bool = True, fetchone: bool = False):
         try:
             self.cursor.execute(sql)
             if select:
@@ -17,7 +17,7 @@ class SqlRequests(Connections):
         except:
             print(f'Ошибка выполнения sql-запроса {sql}')
 
-    def is_user_new(self, user_id):
+    def is_user_new(self, user_id: str) -> bool:
         sql_request = f'''
         select * from "user"
         where user_id = '{user_id}' 
@@ -25,7 +25,7 @@ class SqlRequests(Connections):
         res = self.execute_sql(sql_request, fetchone=True)
         return not bool(res)
 
-    def get_user_tab_id_by_user_id(self, user_id):
+    def get_user_tab_id_by_user_id(self, user_id: str) -> int:
         sql_request = f"""
         select tab_id from "user"
         where user_id = '{user_id}'
@@ -33,7 +33,7 @@ class SqlRequests(Connections):
         res = self.execute_sql(sql_request, fetchone=True)
         return res[0]
 
-    def create_user(self, user_id, username):
+    def create_user(self, user_id: str, username: str) -> None:
         if username == 'None':
             username = 'null'
         else:
@@ -48,10 +48,9 @@ class SqlRequests(Connections):
         now()::timestamp
         )
         '''
-        res = self.execute_sql(sql_request, select=False)
-        assert res
+        self.execute_sql(sql_request, select=False)
 
-    def update_user(self, user_id, username):
+    def update_user(self, user_id: str, username: str) -> None:
         if username == 'None':
             username = 'null'
         else:
@@ -63,10 +62,9 @@ class SqlRequests(Connections):
         updated = now()::timestamp
         where user_id = '{user_id}'
         '''
-        res = self.execute_sql(sql_request, select=False)
-        assert res
+        self.execute_sql(sql_request, select=False)
 
-    def add_date(self, name, date, user_id):
+    def add_date(self, name: str, date: str, user_id: str) -> None:
         user_tab_id = self.get_user_tab_id_by_user_id(user_id)
         sql_request = f'''
         insert into dates (
@@ -80,10 +78,9 @@ class SqlRequests(Connections):
             {user_tab_id}
         )
         '''
-        res = self.execute_sql(sql_request, select=False)
-        assert res
+        self.execute_sql(sql_request, select=False)
 
-    def check_dates(self, user_id, month='all', nearest=False):
+    def check_dates(self, user_id: str, month: str = 'all', nearest: bool = False) -> dict[str, str]:
         if month == 'all':
             month = ''
         else:
@@ -105,7 +102,7 @@ class SqlRequests(Connections):
             res = self.execute_sql(sql_request)
             return {row[0]: row[1] for row in res}
 
-    def get_all_users(self):
+    def get_all_users(self) -> list[str]:
         sql_request = """
         select u.user_id 
         from "user" u 
@@ -113,23 +110,23 @@ class SqlRequests(Connections):
         res = self.execute_sql(sql_request)
         return [user_id for tu in res for user_id in tu]
 
-    def get_remind_date(self, user_id, user_days_remaind_to=3):
+    def get_remind_date(self, user_id: str, user_days_remind_to: int = 3) -> list[tuple[str | int]]:
         sql_request = f"""
         select d."name", d."date", d.user_id, 
-        {user_days_remaind_to} - (date_part('day', age(current_date, d.date::date - interval '{user_days_remaind_to} days'))) 
+        {user_days_remind_to} - (date_part('day', age(current_date, d.date::date - interval '{user_days_remind_to} days'))) 
         as "days_until_date"
         from dates d
         join "user" u on d.user_id = u.tab_id
-        where date_part('month', age(current_date, d.date::date - interval '{user_days_remaind_to} days')) = 0
-        and date_part('day', age(current_date, d.date::date - interval '{user_days_remaind_to} days')) between 0 and
-        {user_days_remaind_to}
+        where date_part('month', age(current_date, d.date::date - interval '{user_days_remind_to} days')) = 0
+        and date_part('day', age(current_date, d.date::date - interval '{user_days_remind_to} days')) between 0 and
+        {user_days_remind_to}
         and u.user_id = '{user_id}'
         order by 4
         """
         res = self.execute_sql(sql_request)
         return res
 
-    def get_remind_hours(self, user_id):
+    def get_remind_hours(self, user_id: str) -> list[tuple[str | int]]:
         sql_request = f'''
         select d."name", d."date", u.user_id, 
         3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) as hours_until,
@@ -154,7 +151,7 @@ class SqlRequests(Connections):
         res = self.execute_sql(sql_request)
         return res
 
-    def delete_date(self, user_id, name):
+    def delete_date(self, user_id: str, name: str) -> None:
         body = f'''
         delete from dates d
         where d.tab_id in (select d.tab_id from dates d
