@@ -112,7 +112,7 @@ class SqlRequests(DbConnection):
 
     def get_remind_date(self, user_id: str, user_days_remind_to: int = 3) -> list[tuple[str | int]]:
         sql_request = f"""
-        select d."name", d."date", d.user_id, 
+        select d."name", d."date", u.user_id, 
         {user_days_remind_to} - (date_part('day', age(current_date, d.date::date - interval '{user_days_remind_to} days'))) 
         as "days_until_date"
         from dates d
