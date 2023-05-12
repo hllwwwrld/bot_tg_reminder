@@ -1,17 +1,11 @@
-from sql_db import SqlRequests
-from db_conn import Connections
 import message_wrapper
-import configparser
 from date_remaind import start_process
+from sql_db import SqlRequests
+from db_conn import BotConnection
 
 
-config = configparser.ConfigParser()
-config.read('connection_config')
-
-connections = Connections(config)
-database = SqlRequests(config)
-
-bot = connections.bot
+database = SqlRequests()
+bot = BotConnection().bot
 
 
 # регистрация пользователя по командам /reg и /start
@@ -30,7 +24,7 @@ def registration(message):
 You will get reminds about chosen dates 3 days before a date, everyday
 You can set personal days value (instead of default 3) to get messages
 use command (/<command>)''')
-        print(f'Зарегестрирован пользователь с ником "{username}" и ID "{user_id}" ')
+        print(f'Зарегистрирован пользователь с ником "{username}" и ID "{user_id}" ')
 
     # если пользователь уже есть в базе, то обновляются данные
     else:

@@ -1,6 +1,9 @@
-from func_for_scheduler import remind_dates, remind_hours
+from func_for_scheduler import Reminds
 import schedule
 from multiprocessing import *
+
+
+reminds = Reminds()
 
 
 def start_process():  # Запуск Process
@@ -10,8 +13,8 @@ def start_process():  # Запуск Process
 class ScheduleInfinite:
 
     def start_schedule():
-        schedule.every(1).day.at('00:00').do(remind_dates)
-        schedule.every(1).hour.at(':00').do(remind_hours)
+        schedule.every(1).day.at('00:00').do(reminds.remind_dates)
+        schedule.every(1).hour.at(':00').do(reminds.remind_hours)
 
         print(schedule.get_jobs())
 

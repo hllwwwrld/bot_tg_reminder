@@ -1,19 +1,19 @@
-from db_conn import Connections
+from db_conn import DbConnection
 
 
-class SqlRequests(Connections):
+class SqlRequests(DbConnection):
     # если fetch=True - запрос на выборку, нужно что-то вернуть, иначе запрос на изменение
     # fetchone - если надо вернуть одну строку
-    def execute_sql(self, sql: str, select: bool = True, fetchone: bool = False):
+    def execute_sql(self, sql: str, select: bool = True, fetchone: bool = False) -> list[tuple] | tuple:
         try:
-            self.cursor.execute(sql)
+            self.database.execute(sql)
             if select:
                 if fetchone:
-                    return self.cursor.fetchone()
+                    return self.database.fetchone()
                 else:
-                    return self.cursor.fetchall()
+                    return self.database.fetchall()
             else:
-                self.database.commit()
+                self.db_connection.commit()
         except:
             print(f'Ошибка выполнения sql-запроса {sql}')
 
