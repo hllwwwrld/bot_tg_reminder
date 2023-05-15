@@ -86,12 +86,18 @@ class SqlRequests(DbConnection):
         else:
             month = f"and date_part('month', d.date) = '{month}'"
 
+        if nearest:
+            nearest = 'and d."date"::time > current_time'
+        else:
+            nearest = ''
+
         sql_request = f'''
         select d."name", d."date"
         from dates d
         join "user" u 
         on  d.user_id = u.tab_id
         where u.user_id = '{user_id}'
+        {nearest}
         {month}
         order by date_part('month', d.date), date_part('day', d.date)
         '''
