@@ -113,15 +113,15 @@ class SqlRequests(DbConnection):
     def get_remind_date(self, user_id: str, user_days_remind_to: int = 3) -> list[tuple[str | int]]:
         sql_request = f"""
         select d."name", d."date", u.user_id, 
-        {user_days_remind_to} - (date_part('day', age(current_date, d.date::date - interval '{user_days_remind_to} days'))) 
-        as "days_until_date"
-        from dates d
-        join "user" u on d.user_id = u.tab_id
-        where date_part('month', age(current_date, d.date::date - interval '{user_days_remind_to} days')) = 0
-        and date_part('day', age(current_date, d.date::date - interval '{user_days_remind_to} days')) between 0 and
-        {user_days_remind_to}
-        and u.user_id = '{user_id}'
-        order by 4
+    {user_days_remind_to} - (date_part('day', age(d.date::date - interval '{user_days_remind_to} days'))) as "days_until_date",
+    date_part('month', age(d.date - interval '{user_days_remind_to} days')) as "month_until_date"
+    from dates d
+    join "user" u 
+    on d.user_id = u.tab_id 
+    where date_part('month', age(d.date::date - interval '{user_days_remind_to} days')) = 0
+    and {user_days_remind_to} - (date_part('day', age(d.date::date - interval '{user_days_remind_to} days'))) between 0 and {user_days_remind_to}
+    and u.user_id = '{user_id}'
+    order by 4
         """
         res = self.execute_sql(sql_request)
         return res
@@ -129,21 +129,28 @@ class SqlRequests(DbConnection):
     def get_remind_hours(self, user_id: str) -> list[tuple[str | int]]:
         sql_request = f'''
         select d."name", d."date", u.user_id, 
-        3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) as hours_until,
-        abs(date_part('minute', age(current_timestamp, d."date"))) as minutes_until
-        --3 - (date_part('day', age(current_timestamp, d.date - interval '3 days'))) as "days_until_date"
-        --date_part('month', age(current_timestamp, d.date - interval '3 days')) as "month_until"
+        date_part('hour', d."date"::time - current_time::time) as hours_until,
+        date_part('minute', d."date"::time - current_time::time) as minutes_until,
+        3 - (date_part('day', age(d.date::date - interval '3 days'))) as "days_until_date"
+        --date_part('month', age(d.date::date - interval '3 days')) as "month_until"
         from dates d
         join "user" u 
         on d.user_id = u.tab_id 
         where 
         case 
-            when 3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) = 0
-            then date_part('minute', age(d."date", current_timestamp)) >= 0
-            else 3 - (date_part('hour', age(current_timestamp, d."date" - interval '3 hours'))) between 1 and 3
+            when date_part('hour', d."date"::time - current_time::time) = 0
+            then date_part('minute', d."date"::time - current_time::time) >= 0
+            when date_part('hour', d."date"::time - current_time::time) = 3
+            then date_part('minute', d."date"::time - current_time::time) = 0
+            else date_part('hour', d."date"::time - current_time::time) between 1 and 2
         end
-        and 3 - (date_part('day', age(current_date, d.date::date - interval '3 days'))) in (0, 1)
-        and date_part('month', age(current_date, d.date::date - interval '3 days')) = 0
+        and
+        case
+            when 3 - (date_part('day', age(d.date::date - interval '3 days'))) = 1
+            then date::time - interval '3 hours' < interval '0 hours'
+            else 3 - (date_part('day', age(d.date::date - interval '3 days'))) = 0
+        end
+        and date_part('month', age(d.date::date - interval '3 days')) = 0
         and d."date"::text not like '% 00:00:00'
         and u.user_id = '{user_id}'
         order by 4

@@ -28,7 +28,7 @@ class Reminds:
             if len(hours_to_remind) > 0:
                 bot.send_message(user_id, f'Upcoming events in next 3 hours:')
                 for event in hours_to_remind:
-                    bot.send_message(user_id, f'Soon comes "{event[0]}" event, which starts in {event[1]}'
-                                              f'\nuntil event: {f"{int(event[3])} hours" if int(event[3]) not in (0, 1) else f"0 hours and {int(event[4]) if int(event[4]) != 60 else 0} minutes"}')
+                    bot.send_message(user_id, f'Soon comes "{event[0]}" event, \nwhich starts in {event[1]}'
+                                              f'\nuntil event: {int(event[3])} hours and {int(event[4])} minutes')
             # else:
         print(f'\n{str(datetime.datetime.now())}: Выполнена ежечасная джоба по отправке уведомлений')
