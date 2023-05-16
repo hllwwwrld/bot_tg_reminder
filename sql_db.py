@@ -90,7 +90,14 @@ class SqlRequests(DbConnection):
             month = f"and date_part('month', d.date) = '{month}'"
 
         if nearest:
-            nearest = 'and d."date"::time > current_time'
+            nearest = f"""
+                      and
+                      case
+                        when 3 - (date_part('day', age(d.date::date - interval '3 days'))) = 0
+                        then d.date::time > '{str(datetime.datetime.now().time())}'::time
+                        else 3 - (date_part('day', age(d.date::date - interval '3 days'))) > 0
+                      end
+                      """
         else:
             nearest = ''
 
@@ -104,9 +111,10 @@ class SqlRequests(DbConnection):
         {month}
         order by date_part('month', d.date), date_part('day', d.date), date_part('minute', d.date)
         '''
+
         if nearest:
             res = self.execute_sql(sql_request, fetchone=True)
-            return {res[0]: str(res[1])}
+            return res
         else:
             res = self.execute_sql(sql_request)
             return {row[0]: row[1] for row in res}

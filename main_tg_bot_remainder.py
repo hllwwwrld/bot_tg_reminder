@@ -108,11 +108,10 @@ def check_all_user_dates(message):
 def check_nearest_user_date(message):
     user_id = message.from_user.id
     dates = database.check_dates(user_id, nearest=True)
-    if len(dates) > 0:
-        for name in dates:
-            bot.send_message(user_id, f'Your nearest date is:\n{name}: {dates[name]}')
+    if dates:
+        bot.send_message(user_id, f'Your nearest date is:\n{dates[0]}: {str(dates[1])}')
     else:
-        print('Not found any dates for you')
+        bot.send_message(user_id, 'Not found any dates for you')
 
 
 @bot.message_handler(commands=['in_month'])
