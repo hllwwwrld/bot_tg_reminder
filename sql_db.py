@@ -95,7 +95,7 @@ class SqlRequests(DbConnection):
                       case
                         when 3 - (date_part('day', age(d.date::date - interval '3 days'))) = 0
                         then d.date::time > '{str(datetime.datetime.now().time())}'::time
-                        else 3 - (date_part('day', age(d.date::date - interval '3 days'))) > 0
+                        else 3 - (date_part('day', age(d.date::date - interval '3 days'))) != 0
                       end
                       """
         else:
@@ -176,7 +176,7 @@ class SqlRequests(DbConnection):
         '''
 
         res = self.execute_sql(sql_request)
-        print(self.execute_sql(f"select '{str(datetime.datetime.now().time())}'::time"))
+        # print(self.execute_sql(f"select '{str(datetime.datetime.now().time())}'::time"))
         return res
 
     def delete_date(self, user_id: str, name: str) -> None:
